@@ -1,6 +1,8 @@
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.arima.model import ARIMA
+import pickle
+import os
 
 def train_and_evaluate_arima(data_path):
     # Load data
@@ -20,9 +22,20 @@ def train_and_evaluate_arima(data_path):
     train_size = int(len(time_series) * 0.8)
     train, test = time_series[:train_size], time_series[train_size:]
 
-    # Fit ARIMA model
-    arima_model = ARIMA(train, order=(5, 1, 0))  # Example order, adjust as needed
-    arima_model_fit = arima_model.fit()
+    retrain = os.getenv('INTROBA_RETRAIN', 'false').lower() == 'true'
+
+    if retrain:
+        # Train the model
+        arima_model = ARIMA(train, order=(5, 1, 0))  # Example order, adjust as needed
+        arima_model_fit = arima_model.fit()
+
+        # Save the model
+        with open('models/saved_models/arima_model.pkl', 'wb') as f:
+            pickle.dump(arima_model_fit, f)
+    else:
+        # Load the model
+        with open('models/saved_models/arima_model.pkl', 'rb') as f:
+            arima_model_fit = pickle.load(f)
 
     # Predict and evaluate ARIMA model
     arima_predictions = arima_model_fit.forecast(steps=len(test))
@@ -31,6 +44,13 @@ def train_and_evaluate_arima(data_path):
     print(f"ARIMA - Mean Squared Error: {arima_mse}")
     print("ARIMA Model Summary:")
     print(arima_model_fit.summary())
+
+    show_eval = os.getenv('INTROBA_SHOWEVAL', 'false').lower() == 'true'
+
+    if show_eval:
+        print("ARIMA - Random Evaluation Results:")
+        for i in range(5):
+            print(f"Expected: {test.iloc[i]}, Predicted: {arima_predictions.iloc[i]}")
 
 # Example usage
 if __name__ == "__main__":

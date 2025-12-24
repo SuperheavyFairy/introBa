@@ -4,6 +4,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.models import load_model
+from tensorflow.keras.losses import MeanSquaredError
+import os
 
 def train_and_evaluate_lstm(data_path):
     # Load data
@@ -43,10 +46,17 @@ def train_and_evaluate_lstm(data_path):
         LSTM(50, activation='relu', input_shape=(timesteps, X.shape[1])),
         Dense(1)
     ])
-    model.compile(optimizer='adam', loss='mse')
+    model.compile(optimizer='adam', loss=MeanSquaredError())
 
-    # Train model
-    model.fit(X_train, y_train, epochs=20, batch_size=32, verbose=1)
+    retrain = os.getenv('INTROBA_RETRAIN', 'false').lower() == 'true'
+
+    if retrain:
+        # Train the model
+        model.fit(X_train, y_train, epochs=20, batch_size=32, verbose=1)
+        model.save('models/saved_models/lstm_model.h5')
+    else:
+        # Load the model
+        model = load_model('models/saved_models/lstm_model.h5')
 
     # Evaluate model
     y_pred = model.predict(X_test)
@@ -55,6 +65,13 @@ def train_and_evaluate_lstm(data_path):
 
     mse = np.mean((y_test - y_pred)**2)
     print(f"LSTM - Mean Squared Error: {mse}")
+
+    show_eval = os.getenv('INTROBA_SHOWEVAL', 'false').lower() == 'true'
+
+    if show_eval:
+        print("LSTM - Random Evaluation Results:")
+        for i in range(5):
+            print(f"Expected: {y_test[i][0]}, Predicted: {y_pred[i][0]}")
 
 # Example usage
 if __name__ == "__main__":
