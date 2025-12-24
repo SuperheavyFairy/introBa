@@ -1,2 +1,7 @@
+models/saved_models/random_forest_model.pkl filter=lfs diff=lfs merge=lfs -text
+models/saved_models/transformer_model.pth filter=lfs diff=lfs merge=lfs -text
+models/saved_models/arima_model.pkl filter=lfs diff=lfs merge=lfs -text
+models/saved_models/lstm_model.h5 filter=lfs diff=lfs merge=lfs -text
+models/saved_models/mlp_model.pkl filter=lfs diff=lfs merge=lfs -text
 models/saved_models/* filter=lfs diff=lfs merge=lfs -text
 pjm_processed.csv filter=lfs diff=lfs merge=lfs -text
